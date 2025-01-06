@@ -4,10 +4,17 @@
     using ATAS.Indicators;
     using System;
     using System.ComponentModel.DataAnnotations;
-
+    public enum ClusterT
+    {
+        DeltaPositive,
+        DeltaNegative,
+        Volume
+    }
     public class IndicatorTests : Indicator
     {
         private int _period = 10;
+        private ClusterT _clusterType = ClusterT.Volume;
+
 
         [Display(GroupName = "Variables", Name = "Period", Order = 10)]
         public int Period { 
@@ -16,6 +23,14 @@
                 RecalculateValues();
             } 
         }
+        [Display(GroupName = "ClusterSettings", Name = "ClusterType")]
+        public ClusterT clusterType
+        {
+            get { return _clusterType; }
+            set {
+                _clusterType = value;
+                RecalculateValues(); }
+        } 
 
         protected override void OnCalculate(int bar, decimal value)
         {
