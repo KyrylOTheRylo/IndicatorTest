@@ -2,7 +2,10 @@
 {
 
     using ATAS.Indicators;
+    using ATAS.Indicators.Drawing;
+    using OFT.Rendering.Settings;
     using System;
+    using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
     public enum ClusterT
     {
@@ -14,7 +17,20 @@
     {
         private int _period = 10;
         private ClusterT _clusterType = ClusterT.Volume;
+        private SortedSet<double> clusterInfo= new SortedSet<double>();
 
+
+
+        public IndicatorTests() 
+        {
+            LineSeries.Add(new LineSeries("Down")
+            {
+                Color = System.Windows.Media.Colors.Orange,
+                LineDashStyle = LineDashStyle.Dash,
+                Value = 97000,
+                Width = 1
+            });
+        }
 
         [Display(GroupName = "Variables", Name = "Period", Order = 10)]
         public int Period { 
