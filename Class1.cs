@@ -7,6 +7,9 @@
     using System;
     using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
+    using System.Drawing;
+    using System.Windows.Media;
+
     public enum ClusterT
     {
         DeltaPositive,
@@ -21,7 +24,7 @@
 
 
 
-        public IndicatorTests() 
+        public IndicatorTests()
         {
             LineSeries.Add(new LineSeries("Down")
             {
@@ -30,6 +33,7 @@
                 Value = 97000,
                 Width = 1
             });
+
         }
 
         [Display(GroupName = "Variables", Name = "Period", Order = 10)]
