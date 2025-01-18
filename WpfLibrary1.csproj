@@ -1,0 +1,67 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Drawing.Common" Version="9.0.1" />
+  </ItemGroup>
+<ItemGroup>
+	<Reference Include="ATAS.Types.dll">
+  <HintPath>D:\WORK\ATAS Platform\ATAS.Types.dll</HintPath>
+</Reference>
+<Reference Include="ATAS.Indicators.dll">
+  <HintPath>D:\WORK\ATAS Platform\ATAS.Indicators.dll</HintPath>
+</Reference>
+<Reference Include="ATAS.QuikStarter.dll">
+  <HintPath>D:\WORK\ATAS Platform\ATAS.QuikStarter.dll</HintPath>
+</Reference>
+<Reference Include="ATAS.DataFeedsCore.dll">
+  <HintPath>D:\WORK\ATAS Platform\ATAS.DataFeedsCore.dll</HintPath>
+</Reference>
+<Reference Include="ATAS.Strategies.dll">
+  <HintPath>D:\WORK\ATAS Platform\ATAS.Strategies.dll</HintPath>
+</Reference>
+<Reference Include="ATAS.Indicators.Technical.dll">
+  <HintPath>D:\WORK\ATAS Platform\ATAS.Indicators.Technical.dll</HintPath>
+</Reference>
+<Reference Include="ATAS.Indicators.Other.dll">
+  <HintPath>D:\WORK\ATAS Platform\ATAS.Indicators.Other.dll</HintPath>
+</Reference>
+<Reference Include="OFT.Core.dll">
+  <HintPath>D:\WORK\ATAS Platform\OFT.Core.dll</HintPath>
+</Reference>
+<Reference Include="OFT.Attributes.dll">
+  <HintPath>D:\WORK\ATAS Platform\OFT.Attributes.dll</HintPath>
+</Reference>
+<Reference Include="OFT.Controls.dll">
+  <HintPath>D:\WORK\ATAS Platform\OFT.Controls.dll</HintPath>
+</Reference>
+<Reference Include="OFT.SystemStatistics.dll">
+  <HintPath>D:\WORK\ATAS Platform\OFT.SystemStatistics.dll</HintPath>
+</Reference>
+<Reference Include="OFT.TradingTechnology.dll">
+  <HintPath>D:\WORK\ATAS Platform\OFT.TradingTechnology.dll</HintPath>
+</Reference>
+<Reference Include="OFT.Platform.Core.dll">
+  <HintPath>D:\WORK\ATAS Platform\OFT.Platform.Core.dll</HintPath>
+</Reference>
+<Reference Include="OFT.Platform.dll">
+  <HintPath>D:\WORK\ATAS Platform\OFT.Platform.dll</HintPath>
+</Reference>
+<Reference Include="Utils.Windows.dll">
+  <HintPath>D:\WORK\ATAS Platform\Utils.Windows.dll</HintPath>
+</Reference>
+<Reference Include="Utils.Common.dll">
+  <HintPath>D:\WORK\ATAS Platform\Utils.Common.dll</HintPath>
+</Reference>
+<Reference Include="OFT.Rendering.dll">
+  <HintPath>D:\WORK\ATAS Platform\OFT.Rendering.dll</HintPath>
+</Reference>
+  </ItemGroup>
+
+</Project>
