@@ -9,6 +9,7 @@
     using OFT.Rendering.Tools;
     using System;
     using System.Collections.Generic;
+    using System.Collections.ObjectModel;
     using System.ComponentModel.DataAnnotations;
     using System.Drawing;
     using Utils.Common.Logging;
@@ -109,7 +110,10 @@
     }
     public class IndicatorTests : Indicator
     {
-        private int _period = 10;
+        private int _lookbackBars = 100; // Number of bars to look back
+        private int _lineLength = 50;   // Length of horizontal lines
+        private int _topItems = 10;     // Number of top items to display
+        private Color _defaultColor = Color.Red; // Default color for lines
         private ClusterT _clusterType = ClusterT.Volume;
         private SortedSet<ItemClass> clusterInfo= new SortedSet<ItemClass>();
 
@@ -127,30 +131,74 @@
         }
         protected override void OnRender(RenderContext context, DrawingLayouts layout)
         {
-            // creating pen, width 4px
-            var pen = new RenderPen(Color.BlueViolet, 4);
+            // Filter the items in clusterInfo for the last 'LookbackBars'
+            var start = Math.Max(0, CurrentBar - LookbackBars + 1);
+            var filteredItems = clusterInfo
+                .Where(item => item.Bar >= start && item.Bar <= CurrentBar) // Filter items within the lookback range
+                .OrderByDescending(item => item.Value) // Sort by Value descending
+                .Take(TopItems); // Take the specified number of top items
 
-            var topItems = clusterInfo.OrderByDescending(item => item.Value).Take(Period);
+            
 
             // Draw horizontal lines for the top items
-            foreach (var item in topItems)
+            foreach (var item in filteredItems)
             {
+                var lineEndBar = Math.Min(CurrentBar, item.Bar + LineLength); // Ensure line doesn't extend beyond the current bar
+
+                // Get the next color from ColorsSource, or fallback to default color
+                var color= _defaultColor;
+
                 HorizontalLinesTillTouch.Add(new LineTillTouch(
                     item.Bar,
                     item.Price,
-                    new System.Drawing.Pen(new System.Drawing.SolidBrush(Color.Red), 2),
-                    1000
+                    new System.Drawing.Pen(new System.Drawing.SolidBrush(color), 2), // Use dynamic color
+                    lineEndBar - item.Bar // Calculate the adjusted line length
                 ));
             }
         }
-
-        [Display(GroupName = "Variables", Name = "Period", Order = 10)]
-        public int Period { 
-            get { return _period; } 
-            set { _period = value;
+        [Display(Name = "Colors", GroupName = "Examples")]
+        public Color DefaultColpr
+        {
+            get { return _defaultColor; }
+            set
+            {
+                _defaultColor = value;
                 RecalculateValues();
-            } 
+            }
         }
+        [Display(GroupName = "Variables", Name = "Lookback Bars", Order = 200)]
+        public int LookbackBars
+        {
+            get { return _lookbackBars; }
+            set
+            {
+                _lookbackBars = value;
+                RecalculateValues();
+            }
+        }
+
+        [Display(GroupName = "Variables", Name = "Line Length", Order = 50)]
+        public int LineLength
+        {
+            get { return _lineLength; }
+            set
+            {
+                _lineLength = value;
+                RecalculateValues();
+            }
+        }
+
+        [Display(GroupName = "Variables", Name = "Top Items", Order = 5)]
+        public int TopItems
+        {
+            get { return _topItems; }
+            set
+            {
+                _topItems = value;
+                RecalculateValues();
+            }
+        }
+
         [Display(GroupName = "ClusterSettings", Name = "ClusterType")]
         public ClusterT clusterType
         {
