@@ -3,6 +3,7 @@
 
     using ATAS.Indicators;
     using ATAS.Indicators.Drawing;
+    using ATAS.Strategies.ATM;
     using ATAS.Types;
     using OFT.Docking.Core.Extenstions;
     using OFT.Rendering.Context;
@@ -13,6 +14,7 @@
     using System.Collections.ObjectModel;
     using System.ComponentModel.DataAnnotations;
     using System.Drawing;
+    using Utils.Common.Collections;
     using Utils.Common.Logging;
     using Utils.Common.Serialization;
 
@@ -54,7 +56,7 @@
                     {
                         volume += prices.ElementAt(j).Volume;
                     }
-                    answer.Add((answer.ElementAt(i).price, volume));
+                    answer.Add((prices.ElementAt(i).Price, volume));
 
                 }
                 answer = answer.OrderByDescending(item => item.value).ToList();
@@ -91,7 +93,7 @@
                     {
                         volume += prices.ElementAt(j).Ask;
                     }
-                    answer.Add((answer.ElementAt(startIndex).price, volume));
+                    answer.Add((prices.ElementAt(i).Price, volume));
 
                 }
                 answer = answer.OrderByDescending(item => item.value).ToList();
@@ -123,7 +125,7 @@
                     {
                         volume += prices.ElementAt(j).Bid;
                     }
-                    answer.Add((answer.ElementAt(i).price, volume));
+                    answer.Add((prices.ElementAt(startIndex).Price, volume));
 
                 }
                 answer = answer.OrderByDescending(item => item.value).ToList();
@@ -182,11 +184,12 @@
             private int _lookbackBars = 100; // Number of bars to look back
             private int _lineLength = 50;   // Length of horizontal lines
             private int _topItems = 10;     // Number of top items to display
-            private int _ticks = 1; // Number of ticks to use for calculation
+            private int _pricesLevels = 1; // Number of price levels to use for calculation
             private int _bars_to_use = 1; // Number of bars to use for calculation
             private Color _defaultColor = Color.Red; // Default color for lines
             private ClusterT _clusterType = ClusterT.Volume;
             private SortedSet<ItemClass> clusterInfo = new SortedSet<ItemClass>();
+            private SortedSet<ItemClass> _singleclusterInfo = new SortedSet<ItemClass>();
 
 
 
@@ -205,7 +208,7 @@
                 // Filter the items in clusterInfo for the last 'LookbackBars'
                 var start = Math.Max(0, CurrentBar - LookbackBars + 1);
                 var filteredItems = clusterInfo
-                    .Where(item => item.Bar >= start && item.Bar <= CurrentBar) // Filter items within the lookback range
+                    .Where(item => item.Bar >= start && item.Bar < CurrentBar-1) // Filter items within the lookback range
                     .OrderByDescending(item => item.Value) // Sort by Value descending
                     .Take(TopItems); // Take the specified number of top items
 
@@ -258,13 +261,13 @@
                     RecalculateValues();
                 }
             }
-            [Display(GroupName = "Variables", Name = "Ticks", Order = 1)]
-            public int Ticks
+            [Display(GroupName = "Variables", Name = "Prices Count", Order = 1)]
+            public int PricesLevels
             {
-                get { return _ticks; }
+                get { return _pricesLevels; }
                 set
                 {
-                    _ticks = value;
+                    _pricesLevels = value;
                     RecalculateValues();
                 }
             }
@@ -305,13 +308,46 @@
 
             protected override void OnCalculate(int bar, decimal value)
             {
+                if (CurrentBar - LookbackBars - 1 >= bar )
+                {
+                    return;
+                }
                 var candle = GetCandle(bar);
 
 
-                // Get the selected strategy
+                // Get the selected strate
                 var strategy = ValueStrategyFactory.GetStrategy(clusterType);
+                var items = strategy.GetPricesNValues(candle, PricesLevels);
+                var tmpcluster = new SortedSet<ItemClass>();
+                for (int i = 0; i < items.Count() ; i++)
+                {
+                    tmpcluster.Add(new ItemClass(bar, items.ElementAt(i).value, items.ElementAt(i).price));
+                    _singleclusterInfo.Add(new ItemClass(bar, items.ElementAt(i).value, items.ElementAt(i).price));
+                }
+                var startindex = Math.Max(0, bar - BarsToUse);
 
+                foreach (var item in tmpcluster)
+                {
+                    decimal tmpValue = item.Value;
+                    var previousbarsOnThatLevel = _singleclusterInfo.Where(x => x.Price == item.Price && x.Bar >= startindex && x.Bar < bar).ToList();
+                    foreach (var prevItem in previousbarsOnThatLevel)
+                    {
 
+                        tmpValue += prevItem.Value;
+                    }
+                    clusterInfo.Add(new ItemClass(item.Bar, tmpValue, item.Price));
+                    
+                }
+                if (bar % (1+ BarsToUse) == 0)
+                {
+                    clusterInfo = new SortedSet<ItemClass>(
+                        clusterInfo.Where(key => key.Bar >= bar - LookbackBars - 1).OrderByDescending(key => key.Value),
+                        new ValueComparer()
+                    );
+                    _singleclusterInfo = new SortedSet<ItemClass>(
+                        _singleclusterInfo.Where(key => key.Bar >= bar - BarsToUse - 1)
+                    );
+                }
 
 
             }
