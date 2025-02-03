@@ -118,7 +118,7 @@
                 List<(decimal price, decimal value)> answer = new List<(decimal price, decimal value)>();
                 for (int i = 0; i < prices.Count(); i++)
                 {
-                    int startIndex = Math.Max(0, i - chunksize);
+                    int startIndex = Math.Max(0, i - chunksize+1);
 
                     decimal volume = 0;
                     for (int j = startIndex; j <= i; j++)
@@ -181,13 +181,13 @@
         }
         public class IndicatorTests : Indicator
         {
-            private int _lookbackBars = 100; // Number of bars to look back
-            private int _lineLength = 50;   // Length of horizontal lines
+            private int _lookbackBars = 400; // Number of bars to look back
+            private int _lineLength = 350;   // Length of horizontal lines
             private int _topItems = 10;     // Number of top items to display
             private int _pricesLevels = 1; // Number of price levels to use for calculation
             private int _bars_to_use = 1; // Number of bars to use for calculation
             private Color _defaultColor = Color.Red; // Default color for lines
-            private ClusterT _clusterType = ClusterT.Volume;
+            private ClusterT _clusterType = ClusterT.DeltaNegative;
             private SortedSet<ItemClass> clusterInfo = new SortedSet<ItemClass>();
             private SortedSet<ItemClass> _singleclusterInfo = new SortedSet<ItemClass>();
 
@@ -308,7 +308,7 @@
 
             protected override void OnCalculate(int bar, decimal value)
             {
-                if (CurrentBar - LookbackBars - 1 >= bar )
+                if (CurrentBar - LookbackBars - BarsToUse >= bar )
                 {
                     return;
                 }
@@ -324,7 +324,7 @@
                     tmpcluster.Add(new ItemClass(bar, items.ElementAt(i).value, items.ElementAt(i).price));
                     _singleclusterInfo.Add(new ItemClass(bar, items.ElementAt(i).value, items.ElementAt(i).price));
                 }
-                var startindex = Math.Max(0, bar - BarsToUse);
+                var startindex = Math.Max(0, bar - BarsToUse +1 );
 
                 foreach (var item in tmpcluster)
                 {
