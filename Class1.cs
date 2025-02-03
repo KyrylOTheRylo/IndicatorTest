@@ -4,6 +4,7 @@
     using ATAS.Indicators;
     using ATAS.Indicators.Drawing;
     using ATAS.Types;
+    using OFT.Docking.Core.Extenstions;
     using OFT.Rendering.Context;
     using OFT.Rendering.Settings;
     using OFT.Rendering.Tools;
@@ -13,6 +14,7 @@
     using System.ComponentModel.DataAnnotations;
     using System.Drawing;
     using Utils.Common.Logging;
+    using Utils.Common.Serialization;
 
     public enum ClusterT
     {
@@ -23,8 +25,9 @@
     public interface IValueStrategy
     {
         decimal GetValue( IndicatorCandle indicator);
+        
         decimal GetPrice(IndicatorCandle indicator);
-    }
+        List<(decimal price, decimal value)> GetPricesNValues(IndicatorCandle indicator, int chunksize = 1);
 
     public class VolumeOption : IValueStrategy
     {
@@ -36,6 +39,31 @@
         public decimal GetPrice(IndicatorCandle indicator)
         {
             return indicator.MaxVolumePriceInfo.Price;
+        }
+        
+        public List<(decimal price, decimal value)> GetPricesNValues(IndicatorCandle indicator,int chunksize =1)
+        {
+            var prices = indicator.GetAllPriceLevels();
+            List<(decimal price, decimal value)> answer = new List<(decimal price, decimal value)>();
+            for (int i = 0; i < prices.Count(); i++)
+            {
+                int startIndex = Math.Max(0, i - chunksize);
+
+                decimal volume = 0;
+                for (int j = startIndex; j <= i; j++)
+                {
+                    volume += prices.ElementAt(j).Volume;
+                }
+                answer.Add((answer.ElementAt(i).price, volume));
+
+            }
+            answer = answer.OrderByDescending(item => item.value).ToList();
+
+            return answer;
+
+
+
+
         }
     }
 
@@ -49,6 +77,27 @@
         {
             return indicator.MaxAskPriceInfo.Price;
         }
+
+        public List<(decimal price, decimal value)> GetPricesNValues(IndicatorCandle indicator, int chunksize = 1)
+            {
+                var prices = indicator.GetAllPriceLevels();
+                List<(decimal price, decimal value)> answer = new List<(decimal price, decimal value)>();
+                for (int i = 0; i < prices.Count(); i++)
+                {
+                    int startIndex = Math.Max(0, i - chunksize);
+
+                    decimal volume = 0;
+                    for (int j = startIndex; j <= i; j++)
+                    {
+                        volume += prices.ElementAt(j).Ask;
+                    }
+                    answer.Add((answer.ElementAt(startIndex).price, volume));
+
+                }
+                answer = answer.OrderByDescending(item => item.value).ToList();
+
+                return answer;
+        }
     }
 
     public class BidOption : IValueStrategy
@@ -61,7 +110,27 @@
         {
             return indicator.MaxBidPriceInfo.Price;
         }
-    }
+            public List<(decimal price, decimal value)> GetPricesNValues(IndicatorCandle indicator, int chunksize = 1)
+            {
+                var prices = indicator.GetAllPriceLevels();
+                List<(decimal price, decimal value)> answer = new List<(decimal price, decimal value)>();
+                for (int i = 0; i < prices.Count(); i++)
+                {
+                    int startIndex = Math.Max(0, i - chunksize);
+
+                    decimal volume = 0;
+                    for (int j = startIndex; j <= i; j++)
+                    {
+                        volume += prices.ElementAt(j).Bid;
+                    }
+                    answer.Add((answer.ElementAt(i).price, volume));
+
+                }
+                answer = answer.OrderByDescending(item => item.value).ToList();
+
+                return answer;
+            }
+        }
 
     public class ValueStrategyFactory
     {
@@ -235,6 +304,7 @@
         protected override void OnCalculate(int bar, decimal value)
         {
             var candle = GetCandle(bar);
+            
 
             // Get the selected strategy
             var strategy = ValueStrategyFactory.GetStrategy(clusterType);
@@ -243,19 +313,7 @@
             clusterInfo.RemoveWhere(item => item.Bar == bar);
             clusterInfo.Add(new ItemClass(bar, calculatedValue, strategy.GetPrice(candle)));
 
-            //// Calculate the maximum value within the specified period
-            //var start = Math.Max(0, bar - Period + 1);
-            //var count = Math.Min(bar + 1, Period);
-            //var max = strategy.GetPrice(candle);
-            //for (var i = start + 1; i < start + count; i++)
-            //{
-            //    var tmpCandle = GetCandle(i);
-            //    var tmpValue = strategy.GetPrice(tmpCandle);
-            //    max = Math.Max(max, (decimal)tmpValue);
-            //}
-
-            //// Assign the max value to the current bar
-            //this[bar] = max;
+           
         }
     }
 }
