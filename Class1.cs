@@ -186,6 +186,7 @@
             private int _topItems = 10;     // Number of top items to display
             private int _pricesLevels = 1; // Number of price levels to use for calculation
             private int _bars_to_use = 1; // Number of bars to use for calculation
+            private int _last_candle_calculated = -1;
             private Color _defaultColor = Color.Red; // Default color for lines
             private ClusterT _clusterType = ClusterT.DeltaNegative;
             private SortedSet<ItemClass> clusterInfo = new SortedSet<ItemClass>();
@@ -198,7 +199,7 @@
                 EnableCustomDrawing = true;
 
                 //Subscribing only to drawing on final layout
-                SubscribeToDrawingEvents(DrawingLayouts.LatestBar);
+                SubscribeToDrawingEvents(DrawingLayouts.Final);
 
 
 
@@ -206,6 +207,7 @@
             protected override void OnRender(RenderContext context, DrawingLayouts layout)
             {
                 // Filter the items in clusterInfo for the last 'LookbackBars'
+                HorizontalLinesTillTouch.Clear();
                 var start = Math.Max(0, CurrentBar - LookbackBars + 1);
                 var filteredItems = clusterInfo
                     .Where(item => item.Bar >= start && item.Bar < CurrentBar-1) // Filter items within the lookback range
@@ -221,7 +223,7 @@
 
                     // Get the next color from ColorsSource, or fallback to default color
                     var color = _defaultColor;
-
+                    
                     HorizontalLinesTillTouch.Add(new LineTillTouch(
                         item.Bar,
                         item.Price,
@@ -308,7 +310,7 @@
 
             protected override void OnCalculate(int bar, decimal value)
             {
-                if (CurrentBar - LookbackBars - BarsToUse >= bar )
+                if (CurrentBar - LookbackBars - BarsToUse >= bar || _last_candle_calculated == bar)
                 {
                     return;
                 }
@@ -349,6 +351,7 @@
                     );
                 }
 
+                _last_candle_calculated = bar;
 
             }
         }
