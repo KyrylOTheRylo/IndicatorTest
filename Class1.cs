@@ -113,6 +113,8 @@
         private int _lookbackBars = 100; // Number of bars to look back
         private int _lineLength = 50;   // Length of horizontal lines
         private int _topItems = 10;     // Number of top items to display
+        private int _ticks = 1; // Number of ticks to use for calculation
+        private int _bars_to_use = 1; // Number of bars to use for calculation
         private Color _defaultColor = Color.Red; // Default color for lines
         private ClusterT _clusterType = ClusterT.Volume;
         private SortedSet<ItemClass> clusterInfo= new SortedSet<ItemClass>();
@@ -166,7 +168,7 @@
                 RecalculateValues();
             }
         }
-        [Display(GroupName = "Variables", Name = "Lookback Bars", Order = 200)]
+        [Display(GroupName = "Variables", Name = "Lookback Bars", Order = 400)]
         public int LookbackBars
         {
             get { return _lookbackBars; }
@@ -177,7 +179,7 @@
             }
         }
 
-        [Display(GroupName = "Variables", Name = "Line Length", Order = 50)]
+        [Display(GroupName = "Variables", Name = "Line Length", Order = 350)]
         public int LineLength
         {
             get { return _lineLength; }
@@ -187,6 +189,27 @@
                 RecalculateValues();
             }
         }
+        [Display(GroupName = "Variables", Name = "Ticks", Order = 1)]
+        public int Ticks
+        {
+            get { return _ticks; }
+            set
+            {
+                _ticks = value;
+                RecalculateValues();
+            }
+        }
+        [Display(GroupName = "Variables", Name = "Bars to use", Order = 1)]
+        public int BarsToUse
+        {
+            get { return _bars_to_use; }
+            set
+            {
+                _bars_to_use = value;
+                RecalculateValues();
+            }
+        }
+
 
         [Display(GroupName = "Variables", Name = "Top Items", Order = 5)]
         public int TopItems
