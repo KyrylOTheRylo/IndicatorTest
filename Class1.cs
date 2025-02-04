@@ -3,20 +3,12 @@
 
     using ATAS.Indicators;
     using ATAS.Indicators.Drawing;
-    using ATAS.Strategies.ATM;
-    using ATAS.Types;
-    using OFT.Docking.Core.Extenstions;
     using OFT.Rendering.Context;
-    using OFT.Rendering.Settings;
-    using OFT.Rendering.Tools;
     using System;
     using System.Collections.Generic;
-    using System.Collections.ObjectModel;
     using System.ComponentModel.DataAnnotations;
     using System.Drawing;
-    using Utils.Common.Collections;
-    using Utils.Common.Logging;
-    using Utils.Common.Serialization;
+
 
     public enum ClusterT
     {
@@ -186,8 +178,8 @@
             private int _topItems = 10;     // Number of top items to display
             private int _pricesLevels = 1; // Number of price levels to use for calculation
             private int _bars_to_use = 1; // Number of bars to use for calculation
-            private int _last_candle_calculated = -1;
             private Color _defaultColor = Color.Red; // Default color for lines
+            private bool _tillTouch = false;
             private ClusterT _clusterType = ClusterT.DeltaNegative;
             private SortedSet<ItemClass> clusterInfo = new SortedSet<ItemClass>();
             private SortedSet<ItemClass> _singleclusterInfo = new SortedSet<ItemClass>();
@@ -207,10 +199,10 @@
             protected override void OnRender(RenderContext context, DrawingLayouts layout)
             {
                 // Filter the items in clusterInfo for the last 'LookbackBars'
-                HorizontalLinesTillTouch.Clear();
+                
                 var start = Math.Max(0, CurrentBar - LookbackBars + 1);
                 var filteredItems = clusterInfo
-                    .Where(item => item.Bar >= start && item.Bar < CurrentBar-1) // Filter items within the lookback range
+                    .Where(item => item.Bar >= start && item.Bar < CurrentBar - 1) // Filter items within the lookback range
                     .OrderByDescending(item => item.Value) // Sort by Value descending
                     .Take(TopItems); // Take the specified number of top items
 
@@ -223,13 +215,39 @@
 
                     // Get the next color from ColorsSource, or fallback to default color
                     var color = _defaultColor;
+                    // draw only if it isn't already drawn
+                    if (HorizontalLinesTillTouch.Count(x => x.FirstPrice == item.Price && x.FirstBar == item.Bar ) == 0)
+                    {
+                        if (_tillTouch)
+                        {
+                            HorizontalLinesTillTouch.Add(new LineTillTouch(
+                            item.Bar,
+                            item.Price,
+                            new System.Drawing.Pen(new System.Drawing.SolidBrush(color), 2) // Use dynamic color
+                        ));
+                        }
+                        else
+                        {
+                            HorizontalLinesTillTouch.Add(new LineTillTouch(
+                                item.Bar,
+                                item.Price,
+                                new System.Drawing.Pen(new System.Drawing.SolidBrush(color), 2), // Use dynamic color
+                                lineEndBar - item.Bar // Calculate the adjusted line length
+                            ));
+                        }
+                    }
                     
-                    HorizontalLinesTillTouch.Add(new LineTillTouch(
-                        item.Bar,
-                        item.Price,
-                        new System.Drawing.Pen(new System.Drawing.SolidBrush(color), 2), // Use dynamic color
-                        lineEndBar - item.Bar // Calculate the adjusted line length
-                    ));
+                    
+                }
+            }
+            [Display(GroupName = "Variables", Name = "Till Touch")]
+            public bool TillTouch
+            {
+                get { return _tillTouch; }
+                set
+                {
+                    _tillTouch = value;
+                    RecalculateValues();
                 }
             }
             [Display(Name = "Colors", GroupName = "Examples")]
@@ -310,10 +328,17 @@
 
             protected override void OnCalculate(int bar, decimal value)
             {
-                if (CurrentBar - LookbackBars - BarsToUse >= bar || _last_candle_calculated == bar)
+                if (CurrentBar - LookbackBars - BarsToUse >= bar )
                 {
                     return;
                 }
+                clusterInfo = new SortedSet<ItemClass>(
+                        clusterInfo.Where(key => key.Bar != bar),
+                        new ValueComparer()
+                    );
+                _singleclusterInfo = new SortedSet<ItemClass>(
+                        _singleclusterInfo.Where(key => key.Bar != bar)
+                    );
                 var candle = GetCandle(bar);
 
 
@@ -351,7 +376,6 @@
                     );
                 }
 
-                _last_candle_calculated = bar;
 
             }
         }
